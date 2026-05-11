@@ -17,9 +17,7 @@ namespace DMArmDLL
     /// </summary>
     public class Robot_UR
     {
-        public double[] ratio = new double[6] { 1, 1, -1, 1, -1, 1 };
-        public double[] zero_offset = new double[6] { -1.57079632679490, 2.86784648706074, -1.58889015515032, 0, 0.127707486697677, 0 };
-
+        public double[] ratio = new double[6] { 1, 1, -1, 1, 1, 1 };
         public double[] Fh = new double[6];
 
         //private double a1, a2, a3, d1, d4, d6;
@@ -264,7 +262,7 @@ namespace DMArmDLL
             double[] dh = new double[6];
             for (int i = 0; i < 6; i++)
             {
-                dh[i] = angle_clip_pnpi(motors[i].Position / ratio[i] + zero_offset[i]);
+                dh[i] = angle_clip_pnpi(motors[i].Position / ratio[i]);
             }
             return dh;
         }
