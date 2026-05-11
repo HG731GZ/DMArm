@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MathNet.Numerics.LinearAlgebra;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,43 +12,13 @@ namespace DMArmDLL
 	{
 		static void Main(string[] args)
 		{
-			USBCANFD CAN = new USBCANFD();
-			CAN.open_device();
-			CAN.init_device();
-			CAN.start_device();
-			CAN.enable_all();
-			CAN.start_can_thread(1);
-			CAN.tools[0].PVT.position_set = 2.3f;
-			CAN.tools[0].PVT.velocity_lim = 2f;
-			CAN.tools[0].PVT.torque_lim = 1f;
-			CAN.tools[0].set();
-			if (CAN.IsOpen)
-			{
-				Console.WriteLine("输入：");
-			}
-			while (true) 
-			{
+			var urMaster = new Robot_UR();
+			double[] q = new double[6] { 0.1745, 0.3491, 0.5236, 0.6981, 0.8727, 1.0472 };
+			urMaster.Angle = q;
+			urMaster.set_robot();
+			var T = Matrix<double>.Build.DenseOfArray(urMaster.TransMatrix);
 
-				string str = Console.ReadLine();
-				if (str == "1")
-				{
-					open(CAN);
-				}
-				if (str == "0")
-				{
-					close(CAN);
-				}
-				CAN.tools[0].set();
-				Console.WriteLine(CAN.tools[0].Torque);
-			}
-		}
-		static void open(USBCANFD CAN)
-		{
-			CAN.tools[0].PVT.position_set = 2.3f;
-		}
-		static void close(USBCANFD CAN)
-		{
-			CAN.tools[0].PVT.position_set = -5f;
+			Console.WriteLine(T.ToString());
 		}
 	}
 }
