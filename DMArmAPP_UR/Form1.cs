@@ -41,8 +41,8 @@ namespace DMArmAPP
 							robot_dh_disp = new TextBox[6],
 							motor_temp_disp = new TextBox[6],
 							tool_states_disp = new TextBox[6],
-							robot_pose_disp = new TextBox[6];
-			
+							slave_dh_disp = new TextBox[6];
+		
 		public Form1()
 		{
 			rrobot = new Robot_UR();
@@ -62,7 +62,7 @@ namespace DMArmAPP
 
 			udp_unity_init();
 
-            udp_remote = new UdpClass(54321);
+            udp_remote = new UdpClass(6005);
             if (udp_remote.bind())
             {
                 Console.WriteLine("UDP Remote Success!");
@@ -249,7 +249,23 @@ namespace DMArmAPP
 				(sender as Button).Text = "关闭重力补偿";
 			}
 		}
-
+        
+		// 主从同步按钮事件
+		private void button_sync_slave_Click(object sender, EventArgs e)
+        {
+			double[] slave_now = new double[6];
+            if (udp_remote.data_recv.data != null)
+            {
+                UdpClass.try_parse_protocol_frame(udp_remote.data_recv.data, out UdpProtocolFrame slave_data);
+				slave_data.q.CopyTo(slave_now, 0);
+				for (int i = 0; i < 6; i++)
+				{
+					canfd.motors[i].PV.position_set = (float)(slave_data.q[i] / rrobot.ratio[i]);
+					canfd.motors[i].PV.velocity_lim = 0.5f;
+				}
+				button_set_PV_Click(null, e);
+            }
+        }
         private void button_udp_connect_Click(object sender, EventArgs e)
         {
             string temp = System.Text.RegularExpressions.Regex.Replace(textBox_udp_port.Text, @"[^0-9]+", "");
@@ -283,8 +299,16 @@ namespace DMArmAPP
 						break;
 					}
 			}
-			
-			for (int i = 0; i < 6; i++)
+			if (udp_remote.data_recv.data != null)
+			{
+				UdpClass.try_parse_protocol_frame(udp_remote.data_recv.data, out UdpProtocolFrame slave_data);
+				for (int i = 0; i < 6; i++)
+				{
+					slave_dh_disp[i].Text = (slave_data.q[i] * 180d / Math.PI).ToString("####.00").PadRight(8) + "°";
+				}
+				vrobot.Angle = slave_data.q;
+			}
+            for (int i = 0; i < 6; i++)
 			{
 				motor_position_disp[i].Text = canfd.motors[i].Position.ToString().PadRight(12, ' ');
 				motor_velocity_disp[i].Text = canfd.motors[i].Velocity.ToString().PadRight(12, ' ');
@@ -305,15 +329,8 @@ namespace DMArmAPP
 				}
 
 				robot_dh_disp[i].Text = (rrobot.Angle[i] * 180d / Math.PI).ToString("####.00").PadRight(8) + "°";
-				if (i<3)
-				{
-					robot_pose_disp[i].Text = (rrobot.Position[i] * 1000d).ToString("####.##").PadLeft(8, ' ') + "mm";
-				}
-				else
-				{
-					robot_pose_disp[i].Text = (rrobot.RPY[i-3] * 180d / Math.PI).ToString("####.##").PadLeft(8, ' ') + "°";
-				}
-			}
+			
+            }
 			tool_states_disp[0].Text = "位置：" + (canfd.tools[0].Position * 180f / Math.PI).ToString("#0.00").PadLeft(5, ' ') + "°";
 			tool_states_disp[1].Text = "速度：" + (canfd.tools[0].Velocity).ToString("#0.00").PadLeft(5, ' ') + "rad/s";
 			tool_states_disp[2].Text = "力矩：" + (canfd.tools[0].Torque).ToString("#0.00").PadLeft(5, ' ') + "Nm";
@@ -338,7 +355,8 @@ namespace DMArmAPP
 			}
 			label_can_param.Text = "系统刷新率：" + canfd.CanParam[6].ToString("#000") + "Hz";
 		}
-		private void udp_send_timer_Tick(object sender, EventArgs e)
+
+        private void udp_send_timer_Tick(object sender, EventArgs e)
 		{
 			for (int i = 0; i < 6; i++)
 			{
@@ -474,7 +492,7 @@ namespace DMArmAPP
 					}
 				}
 			}
-			foreach (Control control in groupBox_tool.Controls)
+			foreach (Control control in groupBox_slave.Controls)
 			{
 				if (control is TextBox)
 				{
@@ -482,7 +500,7 @@ namespace DMArmAPP
 					uint.TryParse(temp, out uint id);
 					if ((id >= 1) && (id <= 6))
 					{
-						robot_pose_disp[id - 1] = control as TextBox;
+						slave_dh_disp[id - 1] = control as TextBox;
 					}
 				}
 			}

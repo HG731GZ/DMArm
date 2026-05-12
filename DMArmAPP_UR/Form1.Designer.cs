@@ -95,7 +95,7 @@
             this.textBox_DH3 = new System.Windows.Forms.TextBox();
             this.textBox_DH2 = new System.Windows.Forms.TextBox();
             this.textBox_DH1 = new System.Windows.Forms.TextBox();
-            this.groupBox_tool = new System.Windows.Forms.GroupBox();
+            this.groupBox_slave = new System.Windows.Forms.GroupBox();
             this.textBox_tool6 = new System.Windows.Forms.TextBox();
             this.textBox_tool5 = new System.Windows.Forms.TextBox();
             this.textBox_tool4 = new System.Windows.Forms.TextBox();
@@ -105,6 +105,7 @@
             this.textBox_udp_port = new System.Windows.Forms.TextBox();
             this.button_udp_connect = new System.Windows.Forms.Button();
             this.panel_unity = new System.Windows.Forms.Panel();
+            this.button_sync_slave = new System.Windows.Forms.Button();
             this.groupBox_motor_temp.SuspendLayout();
             this.groupBox_motor_tor.SuspendLayout();
             this.groupBox_motor_vel.SuspendLayout();
@@ -112,7 +113,7 @@
             this.groupBox_clamp.SuspendLayout();
             this.groupBox_single_motor_set.SuspendLayout();
             this.groupBox_DH.SuspendLayout();
-            this.groupBox_tool.SuspendLayout();
+            this.groupBox_slave.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox_motor_temp
@@ -764,20 +765,20 @@
             this.textBox_DH1.Size = new System.Drawing.Size(126, 27);
             this.textBox_DH1.TabIndex = 0;
             // 
-            // groupBox_tool
+            // groupBox_slave
             // 
-            this.groupBox_tool.Controls.Add(this.textBox_tool6);
-            this.groupBox_tool.Controls.Add(this.textBox_tool5);
-            this.groupBox_tool.Controls.Add(this.textBox_tool4);
-            this.groupBox_tool.Controls.Add(this.textBox_tool3);
-            this.groupBox_tool.Controls.Add(this.textBox_tool2);
-            this.groupBox_tool.Controls.Add(this.textBox_tool1);
-            this.groupBox_tool.Location = new System.Drawing.Point(413, 292);
-            this.groupBox_tool.Name = "groupBox_tool";
-            this.groupBox_tool.Size = new System.Drawing.Size(138, 258);
-            this.groupBox_tool.TabIndex = 40;
-            this.groupBox_tool.TabStop = false;
-            this.groupBox_tool.Text = "末端位置/欧拉角";
+            this.groupBox_slave.Controls.Add(this.textBox_tool6);
+            this.groupBox_slave.Controls.Add(this.textBox_tool5);
+            this.groupBox_slave.Controls.Add(this.textBox_tool4);
+            this.groupBox_slave.Controls.Add(this.textBox_tool3);
+            this.groupBox_slave.Controls.Add(this.textBox_tool2);
+            this.groupBox_slave.Controls.Add(this.textBox_tool1);
+            this.groupBox_slave.Location = new System.Drawing.Point(413, 292);
+            this.groupBox_slave.Name = "groupBox_slave";
+            this.groupBox_slave.Size = new System.Drawing.Size(138, 258);
+            this.groupBox_slave.TabIndex = 40;
+            this.groupBox_slave.TabStop = false;
+            this.groupBox_slave.Text = "从端关节位置";
             // 
             // textBox_tool6
             // 
@@ -853,15 +854,26 @@
             this.panel_unity.Size = new System.Drawing.Size(397, 394);
             this.panel_unity.TabIndex = 64;
             // 
+            // button_sync_slave
+            // 
+            this.button_sync_slave.Location = new System.Drawing.Point(413, 556);
+            this.button_sync_slave.Name = "button_sync_slave";
+            this.button_sync_slave.Size = new System.Drawing.Size(138, 28);
+            this.button_sync_slave.TabIndex = 65;
+            this.button_sync_slave.Text = "同步到主端";
+            this.button_sync_slave.UseVisualStyleBackColor = true;
+            this.button_sync_slave.Click += new System.EventHandler(this.button_sync_slave_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(1121, 691);
+            this.Controls.Add(this.button_sync_slave);
             this.Controls.Add(this.panel_unity);
             this.Controls.Add(this.button_udp_connect);
             this.Controls.Add(this.textBox_udp_port);
-            this.Controls.Add(this.groupBox_tool);
+            this.Controls.Add(this.groupBox_slave);
             this.Controls.Add(this.groupBox_DH);
             this.Controls.Add(this.label_can_param);
             this.Controls.Add(this.button_gravcomp_sw);
@@ -896,8 +908,8 @@
             this.groupBox_single_motor_set.ResumeLayout(false);
             this.groupBox_DH.ResumeLayout(false);
             this.groupBox_DH.PerformLayout();
-            this.groupBox_tool.ResumeLayout(false);
-            this.groupBox_tool.PerformLayout();
+            this.groupBox_slave.ResumeLayout(false);
+            this.groupBox_slave.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -971,7 +983,7 @@
 		private System.Windows.Forms.TextBox textBox_DH3;
 		private System.Windows.Forms.TextBox textBox_DH2;
 		private System.Windows.Forms.TextBox textBox_DH1;
-		private System.Windows.Forms.GroupBox groupBox_tool;
+		private System.Windows.Forms.GroupBox groupBox_slave;
 		private System.Windows.Forms.TextBox textBox_tool6;
 		private System.Windows.Forms.TextBox textBox_tool5;
 		private System.Windows.Forms.TextBox textBox_tool4;
@@ -981,6 +993,7 @@
         private System.Windows.Forms.TextBox textBox_udp_port;
         private System.Windows.Forms.Button button_udp_connect;
 		private System.Windows.Forms.Panel panel_unity;
-	}
+        private System.Windows.Forms.Button button_sync_slave;
+    }
 }
 
