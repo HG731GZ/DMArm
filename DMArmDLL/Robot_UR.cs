@@ -61,9 +61,6 @@ namespace DMArmDLL
         private double[] tau = new double[6];
 
         private bool safe = false;
-		/// <summary>
-		/// 需要注意set的时候value必须是1x6double数组，不能单独修改其中某值
-		/// </summary>
 		public double[] Angle
         {
             get
@@ -85,9 +82,6 @@ namespace DMArmDLL
                 }
             }
         }
-		/// <summary>
-		/// 需要注意set的时候value必须是1x3double数组，不能单独修改其中某值
-		/// </summary>
 		public double[] Position
         {
             get
@@ -97,9 +91,6 @@ namespace DMArmDLL
 				return temp;
             }
         }
-		/// <summary>
-		/// 需要注意set的时候value必须是1x3double数组，不能单独修改其中某值
-		/// </summary>
 		public double[] RPY
         {
             get 
@@ -109,9 +100,7 @@ namespace DMArmDLL
 				return temp; 
             }
         }
-		/// <summary>
-		/// 需要注意set的时候value必须是4x4double数组，不能单独修改其中某值
-		/// </summary>
+
 		public double[,] TransMatrix
         {
             get 
@@ -121,9 +110,6 @@ namespace DMArmDLL
 				return temp;
 			}
         }
-        /// <summary>
-        /// 需要注意set的时候value必须是3x3double数组，不能单独修改其中某值
-        /// </summary>
         public double[,] RotMatrix
         {
             get 

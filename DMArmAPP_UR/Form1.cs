@@ -25,8 +25,6 @@ namespace DMArmAPP
 
 		EmbeddedExeTool fr = null;
 
-		public bool rrobot_visual = true, vrobot_visual = true;//控制unity中机械臂的可见性
-
 		public UdpClass udp_visual, udp_remote;
 
 		public byte[] udp_send_data = new byte[49];
@@ -37,13 +35,10 @@ namespace DMArmAPP
 
 		private bool gravity_flag = false, output_flag = false;
 
-		double[] joint_zero = new double[6] { -3.09, -4.34, 1.56, 0, 0.10, 0 };
-
 		public Form1()
 		{
 			rrobot = new Robot_UR();
 			vrobot = new Robot_UR();
-			//rrobot.reset_tool_param(new double[4] { 0.628796, 0, -0.087305, 0 });
 			InitializeComponent();
 			panel_unity.Controls.Clear();
 			if (fr != null && fr.IsStarted)//如果重新啟動（即fr不為空），則關閉
@@ -130,7 +125,6 @@ namespace DMArmAPP
 		{
 			canfd.enable_all();
 			motor_lock_enable(true);
-			clamp_open(0.5f);
 		}
 
 		private void button_disable_motor_Click(object sender, EventArgs e)
@@ -442,8 +436,6 @@ namespace DMArmAPP
 					}
 				}
 			}
-
-			//form_robot.sync2virtual(rrobot);
 			label_can_param.Text = "系统刷新率：" + canfd.CanParam[6].ToString("#000") + "Hz";
 		}
 		private void udp_send_timer_Tick(object sender, EventArgs e)
@@ -457,15 +449,7 @@ namespace DMArmAPP
 			BitConverter.GetBytes(canfd.tools[0].Position).CopyTo(udp_remote_send_data, 25);
 			udp_remote_send_data[0] = 0x0F;
 			udp_remote_send_data[29] = 0x0C;
-			udp_send_data[48] = 0;
-			if (rrobot_visual)
-			{
-				udp_send_data[48] |= 0b0001;
-			}
-			if (vrobot_visual)
-			{
-				udp_send_data[48] |= 0b0010;
-			}
+			udp_send_data[48] = 0b0011;
 			udp_visual.send(udp_send_data);
 			udp_remote.send(udp_remote_send_data);
         }
@@ -537,25 +521,6 @@ namespace DMArmAPP
 				}
 			}
 		}
-
-		private void clamp_open(float max_torque)
-		{
-			canfd.tools[0].PVT.position_set = 2.3f;
-			canfd.tools[0].PVT.torque_lim = max_torque;
-			canfd.tools[0].PVT.velocity_lim = 2f;
-			canfd.tools[0].set();
-		}
-
-
-
-        private void clamp_close(float max_torque)
-		{
-			canfd.tools[0].PVT.position_set = -5f;
-			canfd.tools[0].PVT.torque_lim = max_torque;
-			canfd.tools[0].PVT.velocity_lim = 2f;
-			canfd.tools[0].set();
-		}
-
 		private void motor_lock_enable(bool enable)
 		{
 			foreach (Control control in groupBox_single_motor_set.Controls)
