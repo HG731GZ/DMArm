@@ -36,11 +36,37 @@ namespace DMArmDLL
 			}
 		}
 	}
+	public struct UdpProtocolFrame
+	{
+		public double[] q;
+		public byte mode;
+		public double[] grip;
+		public uint crc;
+
+		public void set(double[] Q, byte Mode, double[] Grip, uint Crc)
+		{
+			q = new double[6];
+			grip = new double[3];
+			Array.Copy(Q, q, q.Length);
+			Array.Copy(Grip, grip, grip.Length);
+			mode = Mode;
+			crc = Crc;
+		}
+	}
 	/// <summary>
 	/// 建立一个UDP类，LocalIP和Port表示该UDP节点的IP与端口，另一程序此节点发送数据时需填入该IP与端口
 	/// </summary>
 	public class UdpClass
 	{
+		public const int ProtocolFrameLength = 85;
+		public const int ProtocolDataLength = 73;
+		private const int ProtocolDataOffset = 4;
+		private const int ProtocolCrcOffset = 77;
+		private const int ProtocolFooterOffset = 81;
+		private static readonly byte[] ProtocolHeader = new byte[] { 0x55, 0xAA, 0x55, 0xAA };
+		private static readonly byte[] ProtocolFooter = new byte[] { 0x0D, 0x0A, 0x0D, 0x0A };
+		private static readonly uint[] Crc32Table = build_crc32_table();
+
 		private string localIp;
 		private int localPort;
 		private UdpClient udpClient;
@@ -145,6 +171,105 @@ namespace DMArmDLL
 			}
 			return len;
 		}
+		public int send_protocol_frame(double[] q, byte mode, double[] grip)
+		{
+			return send(pack_protocol_frame(q, mode, grip));
+		}
+		public static byte[] pack_protocol_frame(double[] q, byte mode, double[] grip)
+		{
+			if (q == null || q.Length != 6)
+			{
+				throw new ArgumentException("q must contain 6 values.", "q");
+			}
+			if (grip == null || grip.Length != 3)
+			{
+				throw new ArgumentException("grip must contain 3 values.", "grip");
+			}
+
+			byte[] frame = new byte[ProtocolFrameLength];
+			Array.Copy(ProtocolHeader, 0, frame, 0, ProtocolHeader.Length);
+
+			int offset = ProtocolDataOffset;
+			for (int i = 0; i < q.Length; i++)
+			{
+				write_double_big_endian(frame, offset, q[i]);
+				offset += 8;
+			}
+
+			frame[offset] = mode;
+			offset++;
+
+			for (int i = 0; i < grip.Length; i++)
+			{
+				write_double_big_endian(frame, offset, grip[i]);
+				offset += 8;
+			}
+
+			uint crc = calc_crc32(frame, ProtocolDataOffset, ProtocolDataLength);
+			write_uint32_big_endian(frame, ProtocolCrcOffset, crc);
+			Array.Copy(ProtocolFooter, 0, frame, ProtocolFooterOffset, ProtocolFooter.Length);
+			return frame;
+		}
+		public static bool try_parse_protocol_frame(byte[] frame, out UdpProtocolFrame data)
+		{
+			string error;
+			return try_parse_protocol_frame(frame, out data, out error);
+		}
+		public static bool try_parse_protocol_frame(byte[] frame, out UdpProtocolFrame data, out string error)
+		{
+			data = new UdpProtocolFrame();
+			error = "";
+
+			if (frame == null)
+			{
+				error = "Frame is null.";
+				return false;
+			}
+			if (frame.Length != ProtocolFrameLength)
+			{
+				error = "Frame length must be 85 bytes.";
+				return false;
+			}
+			if (!bytes_equal(frame, 0, ProtocolHeader))
+			{
+				error = "Invalid frame header.";
+				return false;
+			}
+			if (!bytes_equal(frame, ProtocolFooterOffset, ProtocolFooter))
+			{
+				error = "Invalid frame footer.";
+				return false;
+			}
+
+			uint crcRx = read_uint32_big_endian(frame, ProtocolCrcOffset);
+			uint crcCalc = calc_crc32(frame, ProtocolDataOffset, ProtocolDataLength);
+			if (crcRx != crcCalc)
+			{
+				error = "Invalid CRC32.";
+				return false;
+			}
+
+			double[] q = new double[6];
+			double[] grip = new double[3];
+			int offset = ProtocolDataOffset;
+			for (int i = 0; i < q.Length; i++)
+			{
+				q[i] = read_double_big_endian(frame, offset);
+				offset += 8;
+			}
+
+			byte mode = frame[offset];
+			offset++;
+
+			for (int i = 0; i < grip.Length; i++)
+			{
+				grip[i] = read_double_big_endian(frame, offset);
+				offset += 8;
+			}
+
+			data.set(q, mode, grip, crcRx);
+			return true;
+		}
 		private void recv_trd()
 		{
 			IPEndPoint p = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 1);//用于抓取接收消息的ip地址与端口号
@@ -229,6 +354,80 @@ namespace DMArmDLL
 				}
 			}
 			return AddressIP;
+		}
+		private static bool bytes_equal(byte[] data, int offset, byte[] expected)
+		{
+			for (int i = 0; i < expected.Length; i++)
+			{
+				if (data[offset + i] != expected[i])
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+		private static void write_double_big_endian(byte[] data, int offset, double value)
+		{
+			byte[] bytes = BitConverter.GetBytes(value);
+			if (BitConverter.IsLittleEndian)
+			{
+				Array.Reverse(bytes);
+			}
+			Array.Copy(bytes, 0, data, offset, bytes.Length);
+		}
+		private static double read_double_big_endian(byte[] data, int offset)
+		{
+			byte[] bytes = new byte[8];
+			Array.Copy(data, offset, bytes, 0, bytes.Length);
+			if (BitConverter.IsLittleEndian)
+			{
+				Array.Reverse(bytes);
+			}
+			return BitConverter.ToDouble(bytes, 0);
+		}
+		private static void write_uint32_big_endian(byte[] data, int offset, uint value)
+		{
+			data[offset] = (byte)((value >> 24) & 0xFF);
+			data[offset + 1] = (byte)((value >> 16) & 0xFF);
+			data[offset + 2] = (byte)((value >> 8) & 0xFF);
+			data[offset + 3] = (byte)(value & 0xFF);
+		}
+		private static uint read_uint32_big_endian(byte[] data, int offset)
+		{
+			return ((uint)data[offset] << 24)
+				| ((uint)data[offset + 1] << 16)
+				| ((uint)data[offset + 2] << 8)
+				| data[offset + 3];
+		}
+		private static uint calc_crc32(byte[] data, int offset, int length)
+		{
+			uint crc = 0xFFFFFFFF;
+			for (int i = 0; i < length; i++)
+			{
+				crc = Crc32Table[(crc ^ data[offset + i]) & 0xFF] ^ (crc >> 8);
+			}
+			return crc ^ 0xFFFFFFFF;
+		}
+		private static uint[] build_crc32_table()
+		{
+			uint[] table = new uint[256];
+			for (uint i = 0; i < table.Length; i++)
+			{
+				uint crc = i;
+				for (int bit = 0; bit < 8; bit++)
+				{
+					if ((crc & 1) != 0)
+					{
+						crc = 0xEDB88320 ^ (crc >> 1);
+					}
+					else
+					{
+						crc >>= 1;
+					}
+				}
+				table[i] = crc;
+			}
+			return table;
 		}
 	}
 }

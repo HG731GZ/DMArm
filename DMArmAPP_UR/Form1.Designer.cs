@@ -102,7 +102,6 @@
             this.textBox_tool3 = new System.Windows.Forms.TextBox();
             this.textBox_tool2 = new System.Windows.Forms.TextBox();
             this.textBox_tool1 = new System.Windows.Forms.TextBox();
-            this.textBox_udp_ip = new System.Windows.Forms.TextBox();
             this.textBox_udp_port = new System.Windows.Forms.TextBox();
             this.button_udp_connect = new System.Windows.Forms.Button();
             this.panel_unity = new System.Windows.Forms.Panel();
@@ -828,27 +827,19 @@
             this.textBox_tool1.Size = new System.Drawing.Size(126, 27);
             this.textBox_tool1.TabIndex = 0;
             // 
-            // textBox_udp_ip
-            // 
-            this.textBox_udp_ip.Location = new System.Drawing.Point(43, 187);
-            this.textBox_udp_ip.Name = "textBox_udp_ip";
-            this.textBox_udp_ip.Size = new System.Drawing.Size(126, 27);
-            this.textBox_udp_ip.TabIndex = 6;
-            this.textBox_udp_ip.Text = "192.168.1.88";
-            // 
             // textBox_udp_port
             // 
-            this.textBox_udp_port.Location = new System.Drawing.Point(175, 187);
+            this.textBox_udp_port.Location = new System.Drawing.Point(43, 189);
             this.textBox_udp_port.Name = "textBox_udp_port";
             this.textBox_udp_port.Size = new System.Drawing.Size(60, 27);
             this.textBox_udp_port.TabIndex = 62;
-            this.textBox_udp_port.Text = "8000";
+            this.textBox_udp_port.Text = "5005";
             // 
             // button_udp_connect
             // 
-            this.button_udp_connect.Location = new System.Drawing.Point(43, 222);
+            this.button_udp_connect.Location = new System.Drawing.Point(135, 189);
             this.button_udp_connect.Name = "button_udp_connect";
-            this.button_udp_connect.Size = new System.Drawing.Size(193, 28);
+            this.button_udp_connect.Size = new System.Drawing.Size(99, 28);
             this.button_udp_connect.TabIndex = 63;
             this.button_udp_connect.Text = "连接UDP";
             this.button_udp_connect.UseVisualStyleBackColor = true;
@@ -857,7 +848,7 @@
             // panel_unity
             // 
             this.panel_unity.Location = new System.Drawing.Point(710, 284);
-            this.panel_unity.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.panel_unity.Margin = new System.Windows.Forms.Padding(2);
             this.panel_unity.Name = "panel_unity";
             this.panel_unity.Size = new System.Drawing.Size(397, 394);
             this.panel_unity.TabIndex = 64;
@@ -870,7 +861,6 @@
             this.Controls.Add(this.panel_unity);
             this.Controls.Add(this.button_udp_connect);
             this.Controls.Add(this.textBox_udp_port);
-            this.Controls.Add(this.textBox_udp_ip);
             this.Controls.Add(this.groupBox_tool);
             this.Controls.Add(this.groupBox_DH);
             this.Controls.Add(this.label_can_param);
@@ -889,7 +879,7 @@
             this.Controls.Add(this.groupBox_motor_vel);
             this.Controls.Add(this.groupBox_motor_pos);
             this.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.Text = "电机调试";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
@@ -988,7 +978,6 @@
 		private System.Windows.Forms.TextBox textBox_tool3;
 		private System.Windows.Forms.TextBox textBox_tool2;
 		private System.Windows.Forms.TextBox textBox_tool1;
-        private System.Windows.Forms.TextBox textBox_udp_ip;
         private System.Windows.Forms.TextBox textBox_udp_port;
         private System.Windows.Forms.Button button_udp_connect;
 		private System.Windows.Forms.Panel panel_unity;

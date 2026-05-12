@@ -27,13 +27,12 @@ namespace DMArmAPP
 
 		public UdpClass udp_visual, udp_remote;
 
-		public byte[] udp_send_data = new byte[49];
-		public byte[] udp_remote_send_data = new byte[30];
+		public byte[] udp_unity_send_data = new byte[49];
 
 		private Thread robot_control_main_thread;
 		private bool control_running = false;
 
-		private bool gravity_flag = false, output_flag = false;
+		private bool gravity_flag = false;
 
 		public Form1()
 		{
@@ -53,9 +52,14 @@ namespace DMArmAPP
 
 			udp_unity_init();
 
-			udp_remote = new UdpClass("192.168.1.200", 11452);
-			udp_remote.bind();
-		}
+            udp_remote = new UdpClass("192.168.3.5", 54321);
+            if (udp_remote.bind())
+            {
+                Console.WriteLine("UDP Remote Success!");
+            }
+
+            udp_remote.start_recv_trd();
+        }
 
 		private void button_open_device_Click(object sender, EventArgs e)
 		{
@@ -238,7 +242,9 @@ namespace DMArmAPP
 
         private void button_udp_connect_Click(object sender, EventArgs e)
         {
-            udp_remote.connect("192.168.1.88", 8000);
+            string temp = System.Text.RegularExpressions.Regex.Replace(textBox_udp_port.Text, @"[^0-9]+", "");
+            int.TryParse(temp, out int portNum);
+            udp_remote.connect("192.168.3.14", portNum);
         }
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
 		{
@@ -442,16 +448,15 @@ namespace DMArmAPP
 		{
 			for (int i = 0; i < 6; i++)
 			{
-				BitConverter.GetBytes((float)rrobot.Angle[i]).CopyTo(udp_send_data, i * 4);
-				BitConverter.GetBytes((float)vrobot.Angle[i]).CopyTo(udp_send_data, i * 4 + 24);
-				BitConverter.GetBytes(canfd.motors[i].Position).CopyTo(udp_remote_send_data, i * 4 + 1);
-			}
-			BitConverter.GetBytes(canfd.tools[0].Position).CopyTo(udp_remote_send_data, 25);
-			udp_remote_send_data[0] = 0x0F;
-			udp_remote_send_data[29] = 0x0C;
-			udp_send_data[48] = 0b0011;
-			udp_visual.send(udp_send_data);
-			udp_remote.send(udp_remote_send_data);
+				BitConverter.GetBytes((float)rrobot.Angle[i]).CopyTo(udp_unity_send_data, i * 4);
+				BitConverter.GetBytes((float)vrobot.Angle[i]).CopyTo(udp_unity_send_data, i * 4 + 24); 
+            }
+			udp_unity_send_data[48] = 0b0011;
+			udp_visual.send(udp_unity_send_data);
+
+            udp_remote.send_protocol_frame(rrobot.Angle,
+                1,
+                new double[3] { Math.Max(0, Math.Min(0.99f, canfd.tools[0].Position)), 0, 0 });
         }
         #endregion
 
@@ -561,16 +566,12 @@ namespace DMArmAPP
 				rrobot.set_robot();
 				for (int i = 0; i < canfd.motors.Length; i++)
 				{
-					canfd.motors[i].MIT.torque_set = (float)rrobot.Tau_G_Motor[i] * 1.1f;
-					if (output_flag)
+					canfd.motors[i].MIT.torque_set = (float)rrobot.Tau_G_Motor[i] * 1.05f;
+					if (i == 3)
 					{
-						canfd.motors[i].MIT.torque_set = (float)(rrobot.Tau_G_Motor[i] + rrobot.Tau_Fh_Motor[i]);
+						canfd.motors[i].MIT.torque_set = (float)rrobot.Tau_G_Motor[i] * 1.2f;
 					}
-					else
-					{
-						canfd.motors[i].MIT.torque_set = (float)rrobot.Tau_G_Motor[i] * 1.1f;
-					}
-					if (gravity_flag)
+                    if (gravity_flag)
 					{
 						canfd.motors[i].set();
 					}

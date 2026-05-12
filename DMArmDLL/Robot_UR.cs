@@ -221,9 +221,6 @@ namespace DMArmDLL
 			for (int i = 0; i < 6; i++)
             {
                 m[i] = mr[i][0];
-                //x[i] = mr[i][1];
-                //y[i] = mr[i][2];
-                //z[i] = mr[i][3];
             }
 
             r1 = Vector<double>.Build.DenseOfArray(mr[0]).SubVector(1, 3);
