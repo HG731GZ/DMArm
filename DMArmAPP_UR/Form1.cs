@@ -1,20 +1,22 @@
-﻿using System;
+﻿using DMArmDLL;
+using MathNet.Numerics;
+using MathNet.Numerics.LinearAlgebra;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Media;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using DMArmDLL;
-using System.IO;
-using System.Threading;
 using static System.Windows.Forms.LinkLabel;
-using System.Runtime.CompilerServices;
-using MathNet.Numerics.LinearAlgebra;
 using ZLGCAN;
+using Control = System.Windows.Forms.Control;
 
 namespace DMArmAPP
 {
@@ -33,12 +35,20 @@ namespace DMArmAPP
 		private bool control_running = false;
 
 		private bool gravity_flag = false;
-
+		private TextBox[]	motor_position_disp = new TextBox[6],
+							motor_velocity_disp = new TextBox[6],
+							motor_torque_disp = new TextBox[6],
+							robot_dh_disp = new TextBox[6],
+							motor_temp_disp = new TextBox[6],
+							tool_states_disp = new TextBox[6],
+							robot_pose_disp = new TextBox[6];
+			
 		public Form1()
 		{
 			rrobot = new Robot_UR();
 			vrobot = new Robot_UR();
 			InitializeComponent();
+			get_ui_disp_control();
 			panel_unity.Controls.Clear();
 			if (fr != null && fr.IsStarted)//如果重新啟動（即fr不為空），則關閉
 			{
@@ -52,7 +62,7 @@ namespace DMArmAPP
 
 			udp_unity_init();
 
-            udp_remote = new UdpClass("192.168.3.5", 54321);
+            udp_remote = new UdpClass(54321);
             if (udp_remote.bind())
             {
                 Console.WriteLine("UDP Remote Success!");
@@ -273,174 +283,58 @@ namespace DMArmAPP
 						break;
 					}
 			}
+			
+			for (int i = 0; i < 6; i++)
+			{
+				motor_position_disp[i].Text = canfd.motors[i].Position.ToString().PadRight(12, ' ');
+				motor_velocity_disp[i].Text = canfd.motors[i].Velocity.ToString().PadRight(12, ' ');
+				motor_torque_disp[i].Text = canfd.motors[i].Torque.ToString().PadRight(12, ' ');
 
-			foreach (Control control in groupBox_motor_pos.Controls)
-			{
-				if (control is TextBox)
+				motor_temp_disp[i].Text = canfd.motors[i].tem_mos.ToString().PadRight(4, ' ')
+										+ canfd.motors[i].tem_rotor.ToString().PadRight(4, ' ')
+										+ canfd.motors[i].ERRCODE + " " + canfd.motors[i].ModeName;
+				if ((canfd.motors[i].ERRCODE != "使能") ||
+					(canfd.motors[i].tem_mos > 60) ||
+					(canfd.motors[i].tem_rotor > 60))
 				{
-					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
-					uint.TryParse(temp, out uint id);
-					if ((id >= 1) && (id <= 6))
-					{
-						control.Text = canfd.motors[id - 1].Position.ToString().PadRight(12, ' ');
-					}
-					else
-					{
-						control.Text = "";
-					}
+					motor_temp_disp[i].BackColor = Color.Pink;
 				}
-			}
-			foreach (Control control in groupBox_motor_vel.Controls)
-			{
-				if (control is TextBox)
+				else
 				{
-					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
-					uint.TryParse(temp, out uint id);
-					if ((id >= 1) && (id <= 6))
-					{
-						control.Text = canfd.motors[id - 1].Velocity.ToString().PadRight(12, ' ');
-					}
-					else
-					{
-						control.Text = "";
-					}
+					motor_temp_disp[i].BackColor = Color.LightGreen;
 				}
-			}
-			foreach (Control control in groupBox_motor_tor.Controls)
-			{
-				if (control is TextBox)
-				{
-					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
-					uint.TryParse(temp, out uint id);
-					if ((id >= 1) && (id <= 6))
-					{
-						control.Text = canfd.motors[id - 1].Torque.ToString().PadRight(12, ' ');
-					}
-					else
-					{
-						control.Text = "";
-					}
-				}
-			}
-			foreach (Control control in groupBox_motor_temp.Controls)
-			{
-				if (control is TextBox)
-				{
-					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
-					uint.TryParse(temp, out uint id);
-					if ((id >= 1) && (id <= 6))
-					{
-						control.Text = canfd.motors[id - 1].tem_mos.ToString().PadRight(4, ' ')
-							+ canfd.motors[id - 1].tem_rotor.ToString().PadRight(4, ' ')
-							+ canfd.motors[id - 1].ERRCODE + " " + canfd.motors[id - 1].ModeName;
-						if ((canfd.motors[id - 1].ERRCODE != "使能") ||
-							(canfd.motors[id - 1].tem_mos > 60) ||
-							(canfd.motors[id - 1].tem_rotor > 60))
-						{
-							control.BackColor = Color.Pink;
-						}
-						else
-						{
-							control.BackColor = Color.LightGreen;
-						}
-					}
-					else
-					{
-						control.Text = "";
-					}
-				}
-			}
-			foreach (Control control in groupBox_clamp.Controls)
-			{
-				if (control is TextBox)
-				{
-					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
-					uint.TryParse(temp, out uint id);
-					switch (id)
-					{
-						case 1:
-							{
-								control.Text = "位置：" + (canfd.tools[0].Position * 180f / Math.PI).ToString("#0.00").PadLeft(5, ' ') + "°";
-								break;
-							}
-						case 2:
-							{
-								control.Text = "速度：" + (canfd.tools[0].Velocity).ToString("#0.00").PadLeft(5, ' ') + "rad/s";
-								break;
-							}
-						case 3:
-							{
-								control.Text = "力矩：" + (canfd.tools[0].Torque).ToString("#0.00").PadLeft(5, ' ') + "Nm";
-								break;
-							}
-						case 4:
-							{
-								control.Text = "夹持力：" + (Math.Max(0, -canfd.tools[0].Torque / 0.01f)).ToString("#0.00").PadLeft(5, ' ') + "N";
-								break;
-							}
-						case 5:
-							{
-								control.Text = "温度：" + canfd.tools[0].tem_mos.ToString().PadLeft(5, ' ')
-							+ canfd.tools[0].tem_rotor.ToString().PadLeft(5, ' ');
-								if (Math.Max(canfd.tools[0].tem_mos, canfd.tools[0].tem_rotor) > 60)
-								{
-									control.BackColor = Color.Pink;
-								}
-								else
-								{
-									control.BackColor = DefaultBackColor;
-								}
-								break;
-							}
-						case 6:
-							{
-								control.Text = "状态：" + canfd.tools[0].ERRCODE + " " + canfd.tools[0].ModeName;
-								if (canfd.tools[0].ERRCODE != "使能")
-								{
-									control.BackColor = Color.Pink;
-								}
-								else
-								{
-									control.BackColor = Color.LightGreen;
-								}
-								break;
-							}
-						default: break;
-					}
-				}
-			}
-			foreach (Control control in groupBox_DH.Controls)
-			{
-				if (control is TextBox)
-				{
-					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
-					uint.TryParse(temp, out uint id);
-					if ((id >= 1) && (id <= 6))
-					{
-						control.Text = (rrobot.Angle[id - 1] * 180d / Math.PI).ToString("####.00").PadRight(8) + "°";
-					}
-					else
-					{
-						control.Text = "";
-					}
-				}
-            }
 
-			foreach (Control control in groupBox_tool.Controls)
-			{
-				if (control is TextBox)
+				robot_dh_disp[i].Text = (rrobot.Angle[i] * 180d / Math.PI).ToString("####.00").PadRight(8) + "°";
+				if (i<3)
 				{
-					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
-					uint.TryParse(temp, out uint id);
-					if ((id >= 1) && (id <= 3))
-					{
-						control.Text = (rrobot.Position[id - 1] * 1000d).ToString("####.##").PadLeft(8, ' ') + "mm";
-					}
-					else if ((id >= 4) && (id <= 6))
-					{
-						control.Text = (rrobot.RPY[id - 4] * 180d/Math.PI).ToString("####.##").PadLeft(8, ' ') + "°";
-					}
+					robot_pose_disp[i].Text = (rrobot.Position[i] * 1000d).ToString("####.##").PadLeft(8, ' ') + "mm";
 				}
+				else
+				{
+					robot_pose_disp[i].Text = (rrobot.RPY[i-3] * 180d / Math.PI).ToString("####.##").PadLeft(8, ' ') + "°";
+				}
+			}
+			tool_states_disp[0].Text = "位置：" + (canfd.tools[0].Position * 180f / Math.PI).ToString("#0.00").PadLeft(5, ' ') + "°";
+			tool_states_disp[1].Text = "速度：" + (canfd.tools[0].Velocity).ToString("#0.00").PadLeft(5, ' ') + "rad/s";
+			tool_states_disp[2].Text = "力矩：" + (canfd.tools[0].Torque).ToString("#0.00").PadLeft(5, ' ') + "Nm";
+			tool_states_disp[3].Text = "夹持力：" + (Math.Max(0, -canfd.tools[0].Torque / 0.01f)).ToString("#0.00").PadLeft(5, ' ') + "N";
+			tool_states_disp[4].Text = "温度：" + canfd.tools[0].tem_mos.ToString().PadLeft(5, ' ')	+ canfd.tools[0].tem_rotor.ToString().PadLeft(5, ' ');
+			if (Math.Max(canfd.tools[0].tem_mos, canfd.tools[0].tem_rotor) > 60)
+			{
+				tool_states_disp[4].BackColor = Color.Pink;
+			}
+			else
+			{
+				tool_states_disp[4].BackColor = DefaultBackColor;
+			}
+			tool_states_disp[5].Text = "状态：" + canfd.tools[0].ERRCODE + " " + canfd.tools[0].ModeName;
+			if (canfd.tools[0].ERRCODE != "使能")
+			{
+				tool_states_disp[5].BackColor = Color.Pink;
+			}
+			else
+			{
+				tool_states_disp[5].BackColor = Color.LightGreen;
 			}
 			label_can_param.Text = "系统刷新率：" + canfd.CanParam[6].ToString("#000") + "Hz";
 		}
@@ -503,7 +397,96 @@ namespace DMArmAPP
 			udp_send_timer.Start();
 			return true;
 		}
-
+		/// <summary>
+		/// 获取UI中用于显示参数的控件
+		/// </summary>
+		private void get_ui_disp_control()
+		{
+			foreach (Control control in groupBox_motor_pos.Controls)
+			{
+				if (control is TextBox)
+				{
+					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
+					uint.TryParse(temp, out uint id);
+					if ((id >= 1) && (id <= 6))
+					{
+						motor_position_disp[id - 1] = control as TextBox;
+					}
+				}
+			}
+			foreach (Control control in groupBox_motor_vel.Controls)
+			{
+				if (control is TextBox)
+				{
+					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
+					uint.TryParse(temp, out uint id);
+					if ((id >= 1) && (id <= 6))
+					{
+						motor_velocity_disp[id - 1] = control as TextBox;
+					}
+				}
+			}
+			foreach (Control control in groupBox_motor_tor.Controls)
+			{
+				if (control is TextBox)
+				{
+					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
+					uint.TryParse(temp, out uint id);
+					if ((id >= 1) && (id <= 6))
+					{
+						motor_torque_disp[id - 1] = control as TextBox;
+					}
+				}
+			}
+			foreach (Control control in groupBox_motor_temp.Controls)
+			{
+				if (control is TextBox)
+				{
+					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
+					uint.TryParse(temp, out uint id);
+					if ((id >= 1) && (id <= 6))
+					{
+						motor_temp_disp[id - 1] = control as TextBox;
+					}
+				}
+			}
+			foreach (Control control in groupBox_clamp.Controls)
+			{
+				if (control is TextBox)
+				{
+					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
+					uint.TryParse(temp, out uint id);
+					if ((id >= 1) && (id <= 6))
+					{
+						tool_states_disp[id - 1] = control as TextBox;
+					}
+				}
+			}
+			foreach (Control control in groupBox_DH.Controls)
+			{
+				if (control is TextBox)
+				{
+					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
+					uint.TryParse(temp, out uint id);
+					if ((id >= 1) && (id <= 6))
+					{
+						robot_dh_disp[id - 1] = control as TextBox;
+					}
+				}
+			}
+			foreach (Control control in groupBox_tool.Controls)
+			{
+				if (control is TextBox)
+				{
+					string temp = System.Text.RegularExpressions.Regex.Replace(control.Name, @"[^0-9]+", "");
+					uint.TryParse(temp, out uint id);
+					if ((id >= 1) && (id <= 6))
+					{
+						robot_pose_disp[id - 1] = control as TextBox;
+					}
+				}
+			}
+		}
 		/// <summary>
 		/// 启动一个线程
 		/// </summary>
@@ -534,22 +517,6 @@ namespace DMArmAPP
 				{
 					control.Enabled = enable;
 				}
-			}
-		}
-
-		private float clamp_spring_torque(float motorangle)
-		{
-			double stiff = 0.02d;
-			motorangle = (float)(motorangle * 180d / Math.PI);
-			if (motorangle < 20f)
-			{
-				double tau = Math.Abs((20f - motorangle) * stiff);
-				tau = Math.Min(tau, 0.2d);
-				return (float)tau;
-			}
-			else
-			{
-				return 0;
 			}
 		}
 
