@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DMArmDLL", "DMArmDLL\DMArmD
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DMArmAPP", "DMArmAPP\DMArmAPP.csproj", "{84D3201F-0C70-43B7-9FA4-AE5C66B6AFA9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DMArmAPP_UR", "DMArmAPP_UR\DMArmAPP_UR.csproj", "{3A5B94B3-BE3C-4BBD-9B88-2A86C183192F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{84D3201F-0C70-43B7-9FA4-AE5C66B6AFA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84D3201F-0C70-43B7-9FA4-AE5C66B6AFA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84D3201F-0C70-43B7-9FA4-AE5C66B6AFA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A5B94B3-BE3C-4BBD-9B88-2A86C183192F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A5B94B3-BE3C-4BBD-9B88-2A86C183192F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A5B94B3-BE3C-4BBD-9B88-2A86C183192F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A5B94B3-BE3C-4BBD-9B88-2A86C183192F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
