@@ -63,13 +63,14 @@ namespace DMArmAPP
 
 			udp_unity_init();
 
-            udp_remote = new UdpClass(6005);
+            udp_remote = new UdpClass("192.168.3.5",6005);
             if (udp_remote.bind())
             {
                 Console.WriteLine("UDP Remote Success!");
             }
 
             udp_remote.start_recv_trd();
+            start_thread(ref teleop_udp_sending_thread, udp_teleop, "Teleoperation Command Sending Thread");
         }
 
 		private void button_open_device_Click(object sender, EventArgs e)
@@ -270,15 +271,13 @@ namespace DMArmAPP
             string temp = System.Text.RegularExpressions.Regex.Replace(textBox_udp_port.Text, @"[^0-9]+", "");
             int.TryParse(temp, out int portNum);
             udp_remote.connect("192.168.3.14", portNum);
-			start_thread(ref teleop_udp_sending_thread, udp_teleop, "Teleoperation Command Sending Thread");
         }		
 		private void button_follow_slave_Click(object sender, EventArgs e)
 		{
-			if (follow_slave)
+            if (follow_slave)
 			//停止跟随从端
 			{
 				follow_slave = false;
-				button_set_PV_Click(null, e);
 				for (int i = 0; i < 6; i++)
 				{
 					canfd.motors[i].set_empty_command();
@@ -289,9 +288,10 @@ namespace DMArmAPP
 			//开始跟随从端
 			{
 				follow_slave = true;
-				(sender as Button).Text = "停止跟随从端";
+                (sender as Button).Text = "停止跟随从端";
 			}
-		}
+            button_set_PV_Click(null, e);
+        }
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
 		{
 			udp_visual.close();
@@ -563,26 +563,31 @@ namespace DMArmAPP
 		{
 			while (true)
 			{
-				udp_remote.send_protocol_frame(rrobot.Angle, 1, new double[3] { Math.Max(0, Math.Min(0.99f, canfd.tools[0].Position)), 0, 0 });
-				if (udp_remote.data_recv.data != null)
+				if (follow_slave)
 				{
-					UdpClass.try_parse_protocol_frame(udp_remote.data_recv.data, out UdpProtocolFrame slave_data);
-					if (follow_slave && canfd.Mode == 2)//只在位置模式下更改PV指令
+					if (udp_remote.data_recv.data != null)
 					{
-						for (int i = 0; i < 6; i++)
+						UdpClass.try_parse_protocol_frame(udp_remote.data_recv.data, out UdpProtocolFrame slave_data);
+						if (canfd.Mode == 2)//只在位置模式下更改PV指令
 						{
-							canfd.motors[i].PV.position_set = (float)(slave_data.q[i] / rrobot.ratio[i]);
-							canfd.motors[i].PV.velocity_lim = pv_lim;
+							for (int i = 0; i < 6; i++)
+							{
+								canfd.motors[i].PV.position_set = (float)(slave_data.q[i] / rrobot.ratio[i]);
+								canfd.motors[i].PV.velocity_lim = pv_lim;
+							}
 						}
-					}
-					else
-					{
-						for (int i = 0; i < 6; i++)
+						else
 						{
-							canfd.motors[i].PV.velocity_lim = 0;
+							for (int i = 0; i < 6; i++)
+							{
+								canfd.motors[i].PV.velocity_lim = 0;
+							}
 						}
 					}
 				}
+
+				udp_remote.send_protocol_frame(rrobot.Angle, 1, new double[3] { Math.Max(0, Math.Min(0.99f, canfd.tools[0].Position)), 0, 0 });
+
 				USBCANFD.delayms(5);
 			}
 		}
@@ -596,7 +601,7 @@ namespace DMArmAPP
 				rrobot.set_robot();
 				for (int i = 0; i < canfd.motors.Length; i++)
 				{
-					canfd.motors[i].MIT.torque_set = (float)rrobot.Tau_G_Motor[i] * 1.05f;
+					canfd.motors[i].MIT.torque_set = (float)rrobot.Tau_G_Motor[i] * 1.1f;
 					if (i == 3)
 					{
 						canfd.motors[i].MIT.torque_set = (float)rrobot.Tau_G_Motor[i] * 1.2f;

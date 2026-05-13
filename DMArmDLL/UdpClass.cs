@@ -342,6 +342,10 @@ namespace DMArmDLL
 				catch (Exception e) { }
 			}
 		}
+		/// <summary>
+		/// 这个函数目前会抓到VMWare的IP，需要修改
+		/// </summary>
+		/// <returns></returns>
 		private static string GetLocalIp()
 		{
 			///获取本地的IP地址
