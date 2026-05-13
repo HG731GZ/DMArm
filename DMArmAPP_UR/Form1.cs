@@ -31,8 +31,9 @@ namespace DMArmAPP
 
 		public byte[] udp_unity_send_data = new byte[49];
 
-		private Thread robot_control_main_thread;
-		private bool control_running = false;
+		private Thread robot_control_main_thread, teleop_udp_sending_thread;
+		private bool control_running = false, follow_slave=false;
+		private float pv_lim = 0.5f;//PV模式的速度限制
 
 		private bool gravity_flag = false;
 		private TextBox[]	motor_position_disp = new TextBox[6],
@@ -249,35 +250,56 @@ namespace DMArmAPP
 				(sender as Button).Text = "关闭重力补偿";
 			}
 		}
-        
+
 		// 主从同步按钮事件
 		private void button_sync_slave_Click(object sender, EventArgs e)
-        {
-			double[] slave_now = new double[6];
-            if (udp_remote.data_recv.data != null)
-            {
-                UdpClass.try_parse_protocol_frame(udp_remote.data_recv.data, out UdpProtocolFrame slave_data);
-				slave_data.q.CopyTo(slave_now, 0);
+		{
+			if (udp_remote.data_recv.data != null)
+			{
+				UdpClass.try_parse_protocol_frame(udp_remote.data_recv.data, out UdpProtocolFrame slave_data);
 				for (int i = 0; i < 6; i++)
 				{
 					canfd.motors[i].PV.position_set = (float)(slave_data.q[i] / rrobot.ratio[i]);
-					canfd.motors[i].PV.velocity_lim = 0.5f;
+					canfd.motors[i].PV.velocity_lim = pv_lim;
 				}
 				button_set_PV_Click(null, e);
-            }
-        }
+			}
+		}
         private void button_udp_connect_Click(object sender, EventArgs e)
         {
             string temp = System.Text.RegularExpressions.Regex.Replace(textBox_udp_port.Text, @"[^0-9]+", "");
             int.TryParse(temp, out int portNum);
             udp_remote.connect("192.168.3.14", portNum);
-        }
+			start_thread(ref teleop_udp_sending_thread, udp_teleop, "Teleoperation Command Sending Thread");
+        }		
+		private void button_follow_slave_Click(object sender, EventArgs e)
+		{
+			if (follow_slave)
+			//停止跟随从端
+			{
+				follow_slave = false;
+				button_set_PV_Click(null, e);
+				for (int i = 0; i < 6; i++)
+				{
+					canfd.motors[i].set_empty_command();
+				}
+				(sender as Button).Text = "开始跟随从端";
+			}
+			else
+			//开始跟随从端
+			{
+				follow_slave = true;
+				(sender as Button).Text = "停止跟随从端";
+			}
+		}
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
 		{
 			udp_visual.close();
 			udp_remote.close();
 			fr.Stop();
 		}
+
+
 		#region Winform定时器Tick事件
 		private void param_updating_timer_Tick(object sender, EventArgs e)
 		{
@@ -365,10 +387,6 @@ namespace DMArmAPP
             }
 			udp_unity_send_data[48] = 0b0011;
 			udp_visual.send(udp_unity_send_data);
-
-            udp_remote.send_protocol_frame(rrobot.Angle,
-                1,
-                new double[3] { Math.Max(0, Math.Min(0.99f, canfd.tools[0].Position)), 0, 0 });
         }
         #endregion
 
@@ -540,7 +558,34 @@ namespace DMArmAPP
 
 		#endregion
 
-		#region 控制线程
+		#region 控制/UDP遥操作线程
+		private void udp_teleop()
+		{
+			while (true)
+			{
+				udp_remote.send_protocol_frame(rrobot.Angle, 1, new double[3] { Math.Max(0, Math.Min(0.99f, canfd.tools[0].Position)), 0, 0 });
+				if (udp_remote.data_recv.data != null)
+				{
+					UdpClass.try_parse_protocol_frame(udp_remote.data_recv.data, out UdpProtocolFrame slave_data);
+					if (follow_slave && canfd.Mode == 2)//只在位置模式下更改PV指令
+					{
+						for (int i = 0; i < 6; i++)
+						{
+							canfd.motors[i].PV.position_set = (float)(slave_data.q[i] / rrobot.ratio[i]);
+							canfd.motors[i].PV.velocity_lim = pv_lim;
+						}
+					}
+					else
+					{
+						for (int i = 0; i < 6; i++)
+						{
+							canfd.motors[i].PV.velocity_lim = 0;
+						}
+					}
+				}
+				USBCANFD.delayms(5);
+			}
+		}
 		private void robot_control()
 		{
 			control_running = true;
