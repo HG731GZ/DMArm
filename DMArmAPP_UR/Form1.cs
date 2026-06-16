@@ -324,11 +324,14 @@ namespace DMArmAPP
 			if (udp_remote.data_recv.data != null)
 			{
 				UdpClass.try_parse_protocol_frame(udp_remote.data_recv.data, out UdpProtocolFrame slave_data);
-				for (int i = 0; i < 6; i++)
+				if (slave_data.q != null)
 				{
-					slave_dh_disp[i].Text = (slave_data.q[i] * 180d / Math.PI).ToString("####.00").PadRight(8) + "°";
+					for (int i = 0; i < 6; i++)
+					{
+						slave_dh_disp[i].Text = (slave_data.q[i] * 180d / Math.PI).ToString("####.00").PadRight(8) + "°";
+					}
+					vrobot.Angle = slave_data.q;
 				}
-				vrobot.Angle = slave_data.q;
 			}
             for (int i = 0; i < 6; i++)
 			{

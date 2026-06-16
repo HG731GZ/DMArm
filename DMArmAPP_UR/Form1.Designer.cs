@@ -850,7 +850,7 @@
             // panel_unity
             // 
             this.panel_unity.Location = new System.Drawing.Point(710, 284);
-            this.panel_unity.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.panel_unity.Margin = new System.Windows.Forms.Padding(2);
             this.panel_unity.Name = "panel_unity";
             this.panel_unity.Size = new System.Drawing.Size(397, 394);
             this.panel_unity.TabIndex = 64;
@@ -861,7 +861,7 @@
             this.button_sync_slave.Name = "button_sync_slave";
             this.button_sync_slave.Size = new System.Drawing.Size(138, 28);
             this.button_sync_slave.TabIndex = 65;
-            this.button_sync_slave.Text = "同步到主端";
+            this.button_sync_slave.Text = "同步到从端";
             this.button_sync_slave.UseVisualStyleBackColor = true;
             this.button_sync_slave.Click += new System.EventHandler(this.button_sync_slave_Click);
             // 
@@ -871,7 +871,7 @@
             this.button_follow_slave.Name = "button_follow_slave";
             this.button_follow_slave.Size = new System.Drawing.Size(138, 28);
             this.button_follow_slave.TabIndex = 66;
-            this.button_follow_slave.Text = "开始跟随主端";
+            this.button_follow_slave.Text = "开始跟随从端";
             this.button_follow_slave.UseVisualStyleBackColor = true;
             this.button_follow_slave.Click += new System.EventHandler(this.button_follow_slave_Click);
             // 
@@ -903,7 +903,7 @@
             this.Controls.Add(this.groupBox_motor_vel);
             this.Controls.Add(this.groupBox_motor_pos);
             this.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Form1";
             this.Text = "电机调试";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
