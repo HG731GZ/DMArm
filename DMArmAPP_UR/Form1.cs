@@ -292,6 +292,16 @@ namespace DMArmAPP
 			}
             button_set_PV_Click(null, e);
         }
+        private void button_go_home_Click(object sender, EventArgs e)
+        {
+			double[] zero = new double[] { -Math.PI / 2, -Math.PI / 2, -Math.PI / 2, -Math.PI / 2, Math.PI / 2, 0 };
+            for (int i = 0; i < 6; i++)
+            {
+                canfd.motors[i].PV.position_set = (float)(zero[i] / rrobot.ratio[i]);
+                canfd.motors[i].PV.velocity_lim = pv_lim;
+            }
+            button_set_PV_Click(null, e);
+        }
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
 		{
 			udp_visual.close();
@@ -300,8 +310,8 @@ namespace DMArmAPP
 		}
 
 
-		#region Winform定时器Tick事件
-		private void param_updating_timer_Tick(object sender, EventArgs e)
+        #region Winform定时器Tick事件
+        private void param_updating_timer_Tick(object sender, EventArgs e)
 		{
 			switch (canfd.Mode)
 			{

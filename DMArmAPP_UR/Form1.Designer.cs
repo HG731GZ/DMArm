@@ -107,6 +107,7 @@
             this.panel_unity = new System.Windows.Forms.Panel();
             this.button_sync_slave = new System.Windows.Forms.Button();
             this.button_follow_slave = new System.Windows.Forms.Button();
+            this.button_go_home = new System.Windows.Forms.Button();
             this.groupBox_motor_temp.SuspendLayout();
             this.groupBox_motor_tor.SuspendLayout();
             this.groupBox_motor_vel.SuspendLayout();
@@ -875,11 +876,22 @@
             this.button_follow_slave.UseVisualStyleBackColor = true;
             this.button_follow_slave.Click += new System.EventHandler(this.button_follow_slave_Click);
             // 
+            // button_go_home
+            // 
+            this.button_go_home.Location = new System.Drawing.Point(562, 292);
+            this.button_go_home.Name = "button_go_home";
+            this.button_go_home.Size = new System.Drawing.Size(138, 28);
+            this.button_go_home.TabIndex = 67;
+            this.button_go_home.Text = "回到预设零位";
+            this.button_go_home.UseVisualStyleBackColor = true;
+            this.button_go_home.Click += new System.EventHandler(this.button_go_home_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(1121, 686);
+            this.Controls.Add(this.button_go_home);
             this.Controls.Add(this.button_follow_slave);
             this.Controls.Add(this.button_sync_slave);
             this.Controls.Add(this.panel_unity);
@@ -1007,6 +1019,7 @@
 		private System.Windows.Forms.Panel panel_unity;
         private System.Windows.Forms.Button button_sync_slave;
 		private System.Windows.Forms.Button button_follow_slave;
-	}
+        private System.Windows.Forms.Button button_go_home;
+    }
 }
 
